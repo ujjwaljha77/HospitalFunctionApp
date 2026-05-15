@@ -1,0 +1,29 @@
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Logging;
+
+namespace HospitalFunctionApp;
+
+public class Function1
+{
+	private readonly ILogger<Function1> _logger;
+
+	public Function1(ILogger<Function1> logger)
+	{
+		_logger = logger;
+	}
+
+	[Function(nameof(Function1))]
+	public async Task Run(
+		[BlobTrigger("medical-reports/{name}", Connection = "StorageConnection")] Stream stream,
+		string name)
+	{
+		using var blobStreamReader = new StreamReader(stream);
+		var content = await blobStreamReader.ReadToEndAsync();
+
+		_logger.LogInformation("Medical report received!");
+		_logger.LogInformation("File name: {name}", name);
+		_logger.LogInformation("File size: {size} bytes", stream.Length);
+	}
+}
